@@ -99,20 +99,16 @@ export default function Home() {
     const elements = state.excalidrawAPI.getSceneElements();
     if (!elements || elements.length === 0) return null;
 
-    const blob = await exportToBlob({
+    const blob = await state.excalidrawExportFns.exportToBlob({
       elements,
       exportPadding: 0,
       appState,
       quality: 0.5,
       files: state.excalidrawAPI.getFiles(),
       getDimensions: () => ({ width: 450, height: 450 }),
-    });
+    }); 
 
-    return new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
+    return await new Promise(r => {let a=new FileReader(); a.onload=r; a.readAsDataURL(blob)}).then((e:any) => e.target.result)
   }
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,7 +127,7 @@ export default function Home() {
   };
 
   const handleExcalidrawChange = async (elements: readonly ExcalidrawElement[], appState: any) => {
-    const newSceneData = serializeAsJSON(elements, appState, state.excalidrawAPI.getFiles(), 'local');
+    const newSceneData = state.excalidrawExportFns.serializeAsJSON(elements, appState, state.excalidrawAPI.getFiles(), 'local');
     if (newSceneData !== state.sceneData) {
       dispatch({ type: actionTypes.SET_SCENE_DATA, payload: newSceneData });
       const dataUrl = await getDataUrl(appState);
